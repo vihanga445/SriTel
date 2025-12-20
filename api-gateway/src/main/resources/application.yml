@@ -8,14 +8,14 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true # Automatically create routes for services registered in Eureka
-          lower-case-service-id: true # Allow accessing USER-SERVICE as /user-service/
+          enabled: true
+          lower-case-service-id: true
       routes:
-        # Custom Route for User Service
+
         - id: user-service
-          uri: lb://USER-SERVICE  # "lb" means Load Balanced. It asks Eureka for the IP.
+          uri: lb://USER-SERVICE
           predicates:
-            - Path=/api/users/** # If the URL starts with this... send to User Service.
+            - Path=/api/users/**
 
 eureka:
   client:
