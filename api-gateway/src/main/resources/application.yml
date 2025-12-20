@@ -1,0 +1,23 @@
+server:
+  port: 8080  # Standard port for Gateways
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # Automatically create routes for services registered in Eureka
+          lower-case-service-id: true # Allow accessing USER-SERVICE as /user-service/
+      routes:
+        # Custom Route for User Service
+        - id: user-service
+          uri: lb://USER-SERVICE  # "lb" means Load Balanced. It asks Eureka for the IP.
+          predicates:
+            - Path=/api/users/** # If the URL starts with this... send to User Service.
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
