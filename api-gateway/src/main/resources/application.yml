@@ -27,6 +27,12 @@ spring:
           predicates:
             - Path=/api/payments/**
 
+          # ... previous routes ...
+        - id: provisioning-service
+          uri: lb://PROVISIONING-SERVICE
+          predicates:
+            - Path=/api/provisioning/**
+
 eureka:
   client:
     service-url:
