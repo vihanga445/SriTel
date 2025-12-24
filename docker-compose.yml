@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # --- INFRASTRUCTURE ---
+  
+  # 1. Database
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sritel_db # Creates a default DB, we can create others via scripts or manually
+    ports:
+      - "3307:3306"
+
+  # 2. Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  # 3. Service Registry (The Phonebook)
+  service-registry:
+    build: ./service-registry  # Path to your project folder
+    container_name: service-registry
+    ports:
+      - "8761:8761"
+    depends_on:
+      - mysql-db # Just to ensure order, though registry doesn't use DB
+
+  # --- MICROSERVICES ---
+
+  # 4. API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+    depends_on:
+      - service-registry
+
+  # 5. User Service
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/sritel_user_db?createDatabaseIfNotExist=true&useSSL=false
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - service-registry
+      - mysql-db
+
+  # 6. Payment Service (Mock)
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+    depends_on:
+      - service-registry
+
+  # 7. Billing Service
+  billing-service:
+    build: ./billing-service
+    container_name: billing-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/sritel_billing_db?createDatabaseIfNotExist=true&useSSL=false
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - service-registry
+      - mysql-db
+      - rabbitmq
+
+  # 8. Notification Service
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - service-registry
+      - rabbitmq
+
+  # 9. Mock Provisioning System
+  mock-provisioning-system:
+    build: ./mock-provisioning-system
+    container_name: mock-provisioning-system
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+    depends_on:
+      - service-registry
+
+  # 10. Provisioning Service
+  provisioning-service:
+    build: ./provisioning-service
+    container_name: provisioning-service
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/sritel_provisioning_db?createDatabaseIfNotExist=true&useSSL=false
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - service-registry
+      - mysql-db
