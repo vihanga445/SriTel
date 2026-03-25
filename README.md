@@ -159,6 +159,3 @@ This project was developed for academic purposes as part of **CSC 4222 — Servi
 
 ---
 
-<div align="center">
-Made with ❤️ by V.S. Abeynayake & R. Sharunee — Department of Computer Science, University of Ruhuna · 2025
-</div>
